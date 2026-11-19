@@ -128,6 +128,16 @@ python tests\runtime_load_test.py --base-url http://127.0.0.1:8765 --concurrency
 
 Contact name and phone number are stored as the snapshot submitted at request time, so a later profile edit cannot invalidate a store verification. Only administrators can read across stores; a verifier sees their own store. Account deletion anonymises identity instead of deleting point and pickup evidence. The development database and uploaded media are excluded from version control.
 
+## Build log
+
+Built between 2026-08-03 and 2026-08-31. The commit history is condensed into a single snapshot, so the phases are summarised here.
+
+- **Design baseline (08-03).** Product scope, data model and interface contracts written first, together with a clickable acceptance app for the core flows, before any mini program account existed.
+- **Isolated test deployment (08-04 to 08-09).** Standalone cloud container that did not disturb the other services on the host, plus a self-service guide for restarting it.
+- **Mobile preview and HTTPS (08-14 to 08-15).** Formal WeChat preview build, backend readiness and load results recorded, then the client switched to the public HTTPS API.
+- **Production hygiene (08-17).** Demo videos, gifts, stores and test users removed from the production database; demo seeding disabled outside development.
+- **Media and staffing (08-30).** Video and image upload moved to object storage; store management and operator accounts added.
+- **Console and import (08-31).** Repeatable video import tool, and the operations console rebuilt as the working surface for staff.
 ## License
 
 MIT. See `LICENSE`.
