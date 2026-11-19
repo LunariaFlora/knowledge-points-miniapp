@@ -1,0 +1,27 @@
+@media (max-width:800px) {
+  .app-shell aside {
+    position:sticky;
+    z-index:10;
+    height:auto;
+    padding:12px 14px;
+    overflow:hidden;
+  }
+  .app-shell .aside-brand { padding:0 4px 10px; }
+  .app-shell .aside-brand .brand-mark { width:32px; height:32px; }
+  .app-shell .aside-brand strong { font-size:17px; }
+  .app-shell nav {
+    display:flex;
+    gap:6px;
+    overflow-x:auto;
+    padding-bottom:4px;
+    scrollbar-width:none;
+  }
+  .app-shell nav::-webkit-scrollbar { display:none; }
+  .app-shell .nav-item {
+    display:flex;
+    flex:0 0 auto;
+    padding:9px 12px;
+    background:#ffffff0b;
+  }
+  .app-shell .nav-item span { display:none; }
+}

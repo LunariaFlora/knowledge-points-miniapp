@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+!.env.example
+backups
+database/*.sqlite3
+database/*.sqlite3-*
+docs
+logs
+tests
+web/media/*.mp4
+web/uploads
+__pycache__
+*.pyc
+

@@ -1,0 +1,16 @@
+<view class="profile-page">
+  <view class="profile-hero"><view class="avatar">氧</view><view><text class="profile-name">{{userName}}</text><text class="profile-copy">完善联系信息，方便门店预约领取 ›</text></view></view>
+  <view class="profile-metrics">
+    <button data-page="points" bindtap="openPage"><text>{{points}}</text><text>当前积分</text></button>
+    <button data-page="points" bindtap="openPage"><text>{{totalEarned}}</text><text>累计积分</text></button>
+    <button data-page="invite" bindtap="openPage"><text>{{successfulInvites}}</text><text>已推荐</text></button>
+  </view>
+  <view class="profile-menu">
+    <button data-page="points" bindtap="openPage"><text class="menu-icon">明</text><text>积分明细</text><text class="arrow">›</text></button>
+    <button data-page="records" bindtap="openPage"><text class="menu-icon">兑</text><text>领取记录</text><text class="arrow">›</text></button>
+    <button data-page="invite" bindtap="openPage"><text class="menu-icon">邀</text><text>我的邀请</text><text class="arrow">›</text></button>
+    <button data-page="rules" bindtap="openPage"><text class="menu-icon">规</text><text>活动规则</text><text class="arrow">›</text></button>
+    <button bindtap="callService"><text class="menu-icon">服</text><text>联系客服 <text wx:if="{{customerServicePhone}}" class="phone">{{customerServicePhone}}</text><text wx:else class="phone-muted">暂未设置</text></text><text class="arrow">›</text></button>
+  </view>
+  <view wx:if="{{errorMessage}}" class="page-error">{{errorMessage}}</view>
+</view>

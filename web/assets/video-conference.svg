@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <defs><linearGradient id="stage" x1="0" x2="1"><stop stop-color="#39369a"/><stop offset=".5" stop-color="#4ca1e3"/><stop offset="1" stop-color="#7955a6"/></linearGradient></defs>
+  <rect width="800" height="450" fill="#16142e"/><rect x="0" y="0" width="800" height="300" fill="url(#stage)"/><rect x="65" y="38" width="670" height="182" rx="8" fill="#e8f6ff" opacity=".92"/><text x="400" y="111" text-anchor="middle" fill="#215c95" font-size="34" font-family="sans-serif" font-weight="700">Health Knowledge Session</text><text x="400" y="158" text-anchor="middle" fill="#527291" font-size="22" font-family="sans-serif">科学 · 健康 · 生活方式</text>
+  <rect x="108" y="172" width="66" height="105" rx="4" fill="#2d3b69"/><circle cx="141" cy="158" r="22" fill="#efc9a5"/>
+  <g fill="#1a2036"><circle cx="80" cy="374" r="38"/><circle cx="167" cy="356" r="43"/><circle cx="257" cy="380" r="40"/><circle cx="348" cy="351" r="45"/><circle cx="450" cy="374" r="42"/><circle cx="550" cy="350" r="44"/><circle cx="655" cy="377" r="43"/><circle cx="742" cy="354" r="39"/></g><path d="M0 420c170-74 298 30 421-24 147-64 231 22 379-34v88H0Z" fill="#0c1122"/>
+</svg>

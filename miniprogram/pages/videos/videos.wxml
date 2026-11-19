@@ -1,0 +1,24 @@
+<view class="videos-page">
+  <view class="points-strip">
+    <view class="points-cell"><text>我的积分</text><text class="points-value">{{points}}</text></view>
+    <view class="points-cell"><text>累计积分</text><text class="points-value">{{totalEarned}}</text></view>
+    <button class="exchange-link" bindtap="goExchange">去兑换 →</button>
+  </view>
+  <scroll-view class="category-tabs" scroll-x enhanced show-scrollbar="false">
+    <view class="category-row">
+      <button wx:for="{{categories}}" wx:key="*this" class="category-button {{item === activeCategory ? 'active' : ''}}" data-category="{{item}}" bindtap="changeCategory">{{item}}</button>
+    </view>
+  </scroll-view>
+  <view wx:if="{{loading}}" class="page-loading">正在加载知识视频…</view>
+  <view wx:elif="{{errorMessage}}" class="page-error">{{errorMessage}}</view>
+  <view wx:elif="{{!filteredVideos.length}}" class="empty-state">这个分类暂时没有视频</view>
+  <view wx:else class="video-list">
+    <button wx:for="{{filteredVideos}}" wx:key="id" class="video-item" data-id="{{item.id}}" hover-class="video-item-active" bindtap="openPlayer">
+      <view class="video-thumb">
+        <image src="{{item.displayCover}}" mode="aspectFill" />
+        <text class="video-play">▶</text><text class="reward-tag">最多{{item.total_points}}分</text><text class="duration-tag">{{item.displayDuration}}</text>
+      </view>
+      <view class="video-copy"><text class="video-title">{{item.title}}</text><view wx:if="{{item.displayTags.length}}" class="video-tags"><text wx:for="{{item.displayTags}}" wx:for-item="tag" wx:key="*this" class="video-tag">{{tag}}</text></view><view class="video-meta-row"><text class="video-meta">{{item.category}}</text><view class="compact-view-count"><view class="eye-icon"></view><text>{{item.displayViews}}</text></view></view><view class="card-progress"><view style="width: {{item.progressPercent}}%"></view></view><text class="card-progress-text">{{item.progressText}}</text></view>
+    </button>
+  </view>
+</view>

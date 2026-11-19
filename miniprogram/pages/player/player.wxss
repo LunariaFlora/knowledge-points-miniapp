@@ -1,0 +1,12 @@
+.player-page { min-height: 100vh; background: #f1f7f5; }
+.player-card { position: relative; background: #111; }
+.player-card video { width: 100%; height: 464rpx; display: block; }
+.player-reward { position: absolute; right: 18rpx; top: 18rpx; padding: 11rpx 20rpx; color: #fff; background: linear-gradient(135deg,#27c9ad,#0d826b); border-radius: 30rpx; box-shadow: 0 8rpx 18rpx rgba(4,99,81,.25); font-size: 29rpx; font-weight: 800; }
+.watch-progress { padding: 22rpx 28rpx; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items:center; gap: 10rpx 18rpx; color: #49645d; background: linear-gradient(135deg,#ecfaf6,#fff); font-size: 26rpx; }.watch-progress-track { grid-column: 1/-1; height: 14rpx; overflow: hidden; background: #dbece7; border-radius: 9rpx; }.watch-progress-fill { height: 100%; background: linear-gradient(90deg,#38d4b7,#0e8f74); border-radius: 9rpx; }.view-count { display:inline-flex;align-items:center;gap:10rpx;color:#0c8d71;font-weight:700; }.eye-icon { position:relative;width:30rpx;height:20rpx;border:3rpx solid currentColor;border-radius:60% 40% 60% 40%;transform:rotate(45deg); }.eye-icon::after { content:"";position:absolute;left:50%;top:50%;width:8rpx;height:8rpx;background:currentColor;border-radius:50%;transform:translate(-50%,-50%); }
+.video-detail-copy { min-height: 660rpx; padding: 42rpx 38rpx; background: #fff; }
+.player-title, .video-byline, .video-summary { display: block; }
+.player-title { font-size: 46rpx; font-weight: 800; line-height: 1.5; }
+.player-tags { margin-top: 20rpx; display: flex; flex-wrap: wrap; gap: 12rpx; }
+.player-tag { padding: 10rpx 18rpx; color: #087b68; background: #e8f9f4; border-radius: 26rpx; font-size: 28rpx; }
+.video-byline { margin-top: 22rpx; color: #5e736d; font-size: 30rpx; line-height: 1.6; }
+.video-summary { margin-top: 40rpx; color: #304a44; font-size: 34rpx; line-height: 1.8; }

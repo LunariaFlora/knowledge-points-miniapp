@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Health Knowledge Points Console</title>
+  <link rel="stylesheet" href="/admin/styles.css">
+  <link rel="stylesheet" href="/admin/points.css">
+  <link rel="stylesheet" href="/admin/gifts.css">
+  <link rel="stylesheet" href="/admin/responsive.css">
+  <link rel="stylesheet" href="/admin/calm-console.css">
+</head>
+<body>
+  <section id="login-view" class="login-shell">
+    <div class="login-brand"><span class="brand-mark">H₂</span><div><strong>Health Knowledge Points</strong><small>运营管理后台</small></div></div>
+    <form id="login-form" class="login-card">
+      <p class="eyebrow">OPERATIONS</p><h1>登录运营后台</h1>
+      <p class="muted">在这里维护的内容和状态，会通过同一个后端同步到小程序。</p>
+      <label>账号<input name="username" value="admin" autocomplete="username" required></label>
+      <label>密码<input name="password" type="password" autocomplete="current-password" required></label>
+      <button type="submit" class="primary">登录</button><p id="login-error" class="error" role="alert"></p>
+    </form>
+  </section>
+
+  <div id="app-view" class="app-shell" hidden>
+    <aside>
+      <div class="aside-brand"><span class="brand-mark">H₂</span><div><strong>Operations</strong><small>内容与用户管理</small></div></div>
+      <nav aria-label="后台功能">
+        <button class="nav-item active" data-section="dashboard"><span></span>运营概览</button>
+        <button class="nav-item" data-section="videos"><span></span>知识视频</button>
+        <button class="nav-item" data-section="watch"><span></span>观看数据</button>
+        <button class="nav-item" data-section="members"><span></span>会员管理</button>
+        <button class="nav-item" data-section="gifts"><span></span>礼品与领取</button>
+        <button class="nav-item" data-section="invites"><span></span>邀请管理</button>
+        <button class="nav-item" data-section="system"><span></span>配置与日志</button>
+      </nav>
+      <div class="aside-footer"><span id="staff-name">系统管理员</span><button id="logout-button">退出</button></div>
+    </aside>
+
+    <main>
+      <section id="dashboard-section" class="page-section">
+        <header><div><p class="eyebrow">OPERATIONS</p><h1>运营概览</h1><p class="muted page-description" data-page-description="dashboard">聚合展示内容、用户、到店申请和转化情况。</p><button class="description-edit" data-edit-description="dashboard">编辑说明</button></div><button id="refresh-dashboard" class="ghost">刷新</button></header>
+        <div class="metric-grid">
+          <article><span>用户总数</span><strong id="metric-users">0</strong></article>
+          <article><span>已发布视频</span><strong id="metric-videos">0</strong></article>
+          <article><span>待处理领取</span><strong id="metric-pending">0</strong></article>
+          <article><span>已到店核销</span><strong id="metric-completed">0</strong></article>
+          <article><span>累计有效观看（分钟）</span><strong id="metric-watch">0分钟</strong></article>
+          <article><span>有效邀请</span><strong id="metric-invites">0</strong></article>
+        </div>
+        <section class="panel dashboard-panel"><div class="panel-title"><div><h2>最近领取申请</h2><p>用于优先联系尚未到店的用户。</p></div></div><div class="table-wrap"><table><thead><tr><th>申请号</th><th>用户</th><th>礼品</th><th>状态</th><th>时间</th></tr></thead><tbody id="dashboard-pickups"></tbody></table></div><div id="dashboard-empty" class="empty" hidden>暂无领取申请。</div></section>
+      </section>
+
+      <section id="videos-section" class="page-section" hidden>
+        <header><div><p class="eyebrow">内容管理</p><h1>知识视频</h1><p class="muted page-description" data-page-description="videos">新增、上传、编辑和上下架；发布后小程序刷新即可看到。</p><button class="description-edit" data-edit-description="videos">编辑说明</button></div><div class="header-actions"><button id="new-video" class="primary">＋ 新增视频</button></div></header>
+        <div class="compact-summary"><span>共 <strong id="video-total">0</strong> 个视频</span><span>已上架 <strong id="video-published">0</strong></span><span>草稿/下架 <strong id="video-hidden">0</strong></span><button id="refresh-videos" class="text-button">刷新</button></div>
+        <section class="panel"><div class="table-wrap"><table class="video-table"><thead><tr><th>视频内容</th><th class="category-column">分类与标签</th><th>时长 / 总积分</th><th>状态</th><th>操作</th></tr></thead><tbody id="video-list"></tbody></table></div><div id="video-empty" class="empty" hidden>还没有视频，点击“新增视频”开始创建。</div></section>
+      </section>
+
+      <section id="watch-section" class="page-section" hidden>
+        <header><div><p class="eyebrow">WATCH DATA</p><h1>观看数据</h1><p class="muted page-description" data-page-description="watch">查看每位会员对各视频的有效观看时长和实际获得积分。</p><button class="description-edit" data-edit-description="watch">编辑说明</button></div><button id="refresh-watch" class="ghost">刷新</button></header>
+        <div class="compact-summary"><span>活跃用户 <strong id="watch-users">0</strong></span><span>产生观看的视频 <strong id="watch-videos">0</strong></span><span>累计有效观看 <strong id="watch-total">0分钟</strong></span><span>已发积分 <strong id="watch-points">0</strong></span></div>
+        <section class="panel"><div class="table-wrap"><table><thead><tr><th>会员</th><th>视频</th><th>有效观看</th><th>完成度</th><th>已获积分</th><th>最后观看</th></tr></thead><tbody id="watch-list"></tbody></table></div><div id="watch-empty" class="empty" hidden>还没有有效观看记录。</div></section>
+      </section>
+
+      <section id="gifts-section" class="page-section" hidden>
+        <header><div><p class="eyebrow">到店运营</p><h1>礼品与领取记录</h1><p class="muted page-description" data-page-description="gifts">维护礼品、积分价格和库存，并处理用户到店领取。</p><button class="description-edit" data-edit-description="gifts">编辑说明</button></div><button id="new-gift" class="primary">＋ 新增礼品</button></header>
+        <section class="panel"><div class="panel-title"><div><h2>礼品管理</h2><p>名称、市场参考价、兑换积分、多张图片和库存均可编辑；保存后小程序刷新生效。</p></div><button id="refresh-gifts" class="text-button">刷新</button></div><div class="table-wrap"><table><thead><tr><th>礼品</th><th>市场参考价</th><th>兑换积分</th><th>门店</th><th>可用 / 锁定 / 已核销</th><th>状态</th><th>操作</th></tr></thead><tbody id="gift-list"></tbody></table></div></section>
+        <section class="panel sub-panel"><div class="panel-title"><div><h2>领取记录管理</h2><p>先联系用户，到店后凭领取码核销。</p></div><button id="refresh-pickups" class="text-button">刷新</button></div><div class="table-wrap"><table><thead><tr><th>申请</th><th>会员 / 联系方式</th><th>礼品 / 门店</th><th>状态</th><th>领取码</th><th>操作</th></tr></thead><tbody id="pickup-list"></tbody></table></div><div id="pickup-empty" class="empty" hidden>暂无领取记录。</div></section>
+      </section>
+
+      <section id="members-section" class="page-section" hidden>
+        <header><div><p class="eyebrow">会员运营</p><h1>会员管理</h1><p class="muted page-description" data-page-description="members">集中查看资料、累计观看、积分、邀请上下级和来源。</p><button class="description-edit" data-edit-description="members">编辑说明</button></div><button id="refresh-members" class="text-button">刷新</button></header>
+        <div class="search-row"><input id="member-search" type="search" placeholder="搜索姓名、手机号、标签或邀请码"><span id="member-count" class="muted"></span></div>
+        <section class="panel"><div class="table-wrap"><table><thead><tr><th>会员资料</th><th>累计观看</th><th>积分</th><th>邀请上级</th><th>邀请下级</th><th>来源</th><th>状态</th><th>操作</th></tr></thead><tbody id="member-list"></tbody></table></div><div id="member-empty" class="empty" hidden>没有匹配的会员。</div></section>
+      </section>
+
+      <section id="invites-section" class="page-section" hidden>
+        <header><div><p class="eyebrow">邀请增长</p><h1>邀请关系</h1><p class="muted page-description" data-page-description="invites">明确记录谁邀请了谁、入口来源和奖励状态。</p><button class="description-edit" data-edit-description="invites">编辑说明</button></div><button id="refresh-invites" class="text-button">刷新</button></header>
+        <div class="compact-summary"><span>关系总数 <strong id="invite-total">0</strong></span><span>已奖励 <strong id="invite-rewarded">0</strong></span><span>待首次积分 <strong id="invite-bound">0</strong></span></div>
+        <section class="panel"><div class="table-wrap"><table><thead><tr><th>邀请人（上级）</th><th>受邀会员（下级）</th><th>绑定来源</th><th>入口信息</th><th>绑定时间</th><th>状态</th></tr></thead><tbody id="invite-list"></tbody></table></div><div id="invite-empty" class="empty" hidden>还没有邀请绑定记录。</div></section>
+      </section>
+
+      <section id="system-section" class="page-section" hidden>
+        <header><div><p class="eyebrow">系统管理</p><h1>门店、账号与日志</h1><p class="muted page-description" data-page-description="system">维护门店、公司人员账号、文件与操作日志。</p><button class="description-edit" data-edit-description="system">编辑说明</button></div><div class="header-actions"><button id="change-password" class="ghost">修改我的密码</button><button id="new-store" class="ghost">＋ 新增门店</button><button id="new-staff" class="primary">＋ 新增账号</button></div></header>
+        <section class="panel"><div class="panel-title"><div><h2>门店管理</h2><p>礼品库存、领取申请和核销账号都关联到这里。</p></div></div><div class="table-wrap"><table><thead><tr><th>门店</th><th>地址</th><th>联系电话</th><th>营业时间</th><th>状态</th><th>操作</th></tr></thead><tbody id="store-list"></tbody></table></div><div id="store-empty" class="empty" hidden>还没有门店，请先新增门店。</div></section>
+        <section class="action-card sub-panel"><div><h2>小程序客服电话</h2><p>显示在“小程序－我的－联系客服”。未设置时用户端不会显示虚构号码。</p></div><form id="service-phone-form" class="inline-config-form"><input name="customerServicePhone" inputmode="tel" placeholder="例如：0371-12345678"><button class="primary" type="submit">保存号码</button></form></section>
+        <section class="action-card sub-panel"><div><h2>导出操作日志</h2><p>包含登录、视频与礼品修改、库存、积分调整和核销等操作。</p></div><button id="export-logs" class="primary">导出日志 CSV</button></section>
+        <section class="panel sub-panel"><div class="panel-title"><div><h2>OSS 文件管理</h2><p>核对文件是否被视频或礼品使用；未绑定文件需等待 7 天并再次确认后才能永久删除。</p></div><button id="refresh-assets" class="text-button">重新检查</button></div><div id="asset-summary" class="compact-summary"></div><div class="table-wrap"><table><thead><tr><th>文件</th><th>类型</th><th>大小</th><th>使用状态</th><th>清理时间</th><th>操作</th></tr></thead><tbody id="asset-list"></tbody></table></div><div id="asset-empty" class="empty" hidden>OSS 中还没有视频或图片文件。</div></section>
+        <section class="panel sub-panel"><div class="panel-title"><div><h2>后台账号</h2><p>管理员维护内容和账号；门店核销员只能处理所属门店领取记录。</p></div></div><div class="table-wrap"><table><thead><tr><th>账号</th><th>姓名</th><th>角色</th><th>门店</th><th>状态</th><th>操作</th></tr></thead><tbody id="staff-list"></tbody></table></div></section>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="video-dialog"><form id="video-form" method="dialog">
+    <div class="dialog-head"><div><p class="eyebrow">VIDEO</p><h2 id="video-dialog-title">新增视频</h2></div><button type="button" class="close" data-close-video>×</button></div>
+    <input type="hidden" name="id"><input type="hidden" name="coverUrl">
+    <div class="form-grid">
+      <label class="wide">视频标题<input name="title" maxlength="80" required></label>
+      <label>分类<input name="category" value="Health Knowledge" list="video-category-options" required><small>可选择已有分类，也可直接输入新分类。</small></label><datalist id="video-category-options"></datalist><label>状态<select name="status"><option value="DRAFT">保存草稿</option><option value="PUBLISHED">立即上架</option><option value="OFFLINE">下架</option></select></label>
+      <label class="wide">视频标签<input name="tags" maxlength="200" placeholder="例如：肺结节，循证医学，吸烟风险"><small>多个标签用逗号分隔，会显示在小程序视频页。</small></label>
+      <label class="wide">内容简介<textarea name="summary" rows="3" required></textarea></label>
+      <label class="wide file-field">上传视频文件<input id="video-file" type="file" accept="video/mp4,video/webm"><small id="video-upload-state">支持 MP4、WebM，不超过5GB。上传完成后仍需点击“保存视频”。</small></label>
+      <label>视频时长（秒）<input name="durationSeconds" type="number" min="1" value="60" readonly required><small>由上传文件自动识别，不可人工修改。</small></label>
+      <label>视频总积分<input name="totalPoints" type="number" min="0" value="1" required><small id="video-points-hint">系统会按时长给出推荐值，可人工调整。</small></label>
+      <label class="wide file-field">视频封面<input id="video-cover-file" type="file" accept="image/png,image/jpeg,image/webp"><small id="cover-upload-state">支持上传封面，也可保留当前封面。</small></label>
+      <div class="wide image-preview-wrap"><img id="video-cover-preview" class="gift-image-preview" alt="视频封面预览"><span class="muted">封面会显示在后台和小程序视频列表。</span></div>
+      <details class="wide storage-details"><summary>文件存储信息（仅故障排查时查看）</summary><label>存储编号<input name="mediaUrl" placeholder="选择文件后自动生成" readonly required></label></details>
+    </div><p id="video-error" class="error"></p><div class="dialog-actions"><button type="button" class="ghost" data-close-video>取消</button><button type="submit" class="primary">保存视频</button></div>
+  </form></dialog>
+
+  <dialog id="gift-dialog"><form id="gift-form" method="dialog">
+    <div class="dialog-head"><div><p class="eyebrow">GIFT</p><h2 id="gift-dialog-title">新增礼品</h2></div><button type="button" class="close" data-close-gift>×</button></div>
+    <input type="hidden" name="id"><input type="hidden" name="imageKey" value="gift"><input type="hidden" name="imageUrl"><input type="hidden" name="imageUrls" value="[]">
+    <div class="form-grid"><label>礼品名称<input name="name" required></label><label>兑换积分<input name="pointsCost" type="number" min="1" required></label><label class="wide">礼品说明<textarea name="description" rows="3" required></textarea></label><label>适用门店<select name="storeId" required></select></label><label>市场参考价（元）<input name="marketPrice" type="number" min="0" value="0"><small>这里保存多少，小程序就展示多少；填0时不显示划线价格。</small></label><label id="gift-stock-field">初始可用库存<input name="availableQuantity" type="number" min="0" value="0"></label><label>状态<select name="status"><option value="ACTIVE">上架</option><option value="INACTIVE">下架</option></select></label><label class="wide">礼品图片（最多8张）<input id="gift-image-file" type="file" accept="image/png,image/jpeg,image/webp" multiple><small>一次可选择多张；重新选择并上传会替换当前图片组。</small></label><div class="wide image-preview-wrap"><div id="gift-image-preview" class="gift-image-preview-grid"></div><span id="gift-upload-state" class="muted">尚未选择图片</span></div></div>
+    <p id="gift-error" class="error"></p><div class="dialog-actions"><button type="button" class="ghost" data-close-gift>取消</button><button type="submit" class="primary">保存礼品</button></div>
+  </form></dialog>
+
+  <dialog id="member-detail-dialog" class="wide-dialog"><div class="dialog-body"><div class="dialog-head"><div><p class="eyebrow">MEMBER</p><h2 id="member-detail-title">会员详情</h2></div><button type="button" class="close" data-close-detail>×</button></div><div id="member-detail-content" class="detail-content"></div></div></dialog>
+  <dialog id="member-dialog"><form id="member-form" method="dialog"><div class="dialog-head"><div><p class="eyebrow">PROFILE</p><h2>编辑会员资料</h2></div><button type="button" class="close" data-close-member>×</button></div><input type="hidden" name="id"><div class="form-grid"><label>姓名<input name="name" required></label><label>联系电话<input name="mobile"></label><label class="wide">标签<input name="tags"></label><label class="wide">跟进备注<textarea name="notes" rows="4"></textarea></label><label>状态<select name="status"><option value="ACTIVE">正常</option><option value="DISABLED">停用</option></select></label></div><p id="member-error" class="error"></p><div class="dialog-actions"><button type="button" class="ghost" data-close-member>取消</button><button type="submit" class="primary">保存资料</button></div></form></dialog>
+  <dialog id="points-dialog"><form id="points-form" method="dialog"><div class="dialog-head"><div><p class="eyebrow">POINTS</p><h2>人工调整积分</h2></div><button type="button" class="close" data-close-points>×</button></div><input type="hidden" name="userId"><p id="points-user-name" class="muted"></p><label>调整数量<input name="amount" type="number" required><small>增加填正数，扣减填负数。</small></label><label>原因<textarea name="reason" rows="3" required></textarea></label><p id="points-error" class="error"></p><div class="dialog-actions"><button type="button" class="ghost" data-close-points>取消</button><button type="submit" class="primary">确认并记流水</button></div></form></dialog>
+  <dialog id="store-dialog"><form id="store-form" method="dialog"><div class="dialog-head"><div><p class="eyebrow">STORE</p><h2 id="store-dialog-title">新增门店</h2></div><button type="button" class="close" data-close-store>×</button></div><input type="hidden" name="id"><div class="form-grid"><label>门店名称<input name="name" required></label><label>联系电话<input name="contactPhone" required></label><label class="wide">详细地址<input name="address" required></label><label>营业时间<input name="businessHours" placeholder="09:00–18:00" required></label><label>状态<select name="status"><option value="ACTIVE">营业</option><option value="INACTIVE">停用</option></select></label></div><p id="store-error" class="error"></p><div class="dialog-actions"><button type="button" class="ghost" data-close-store>取消</button><button type="submit" class="primary">保存门店</button></div></form></dialog>
+  <dialog id="staff-dialog"><form id="staff-form" method="dialog"><div class="dialog-head"><div><p class="eyebrow">STAFF</p><h2 id="staff-dialog-title">新增后台账号</h2></div><button type="button" class="close" data-close-staff>×</button></div><input type="hidden" name="id"><div class="form-grid"><label>登录账号<input name="username" minlength="3" maxlength="32" required></label><label>姓名<input name="displayName" required></label><label>角色<select name="role"><option value="STORE_VERIFIER">门店核销员</option><option value="ADMIN">管理员</option></select></label><label>所属门店<select name="storeId"></select></label><label class="wide">密码<input name="password" type="password" minlength="10"><small>至少10位，同时包含字母和数字；编辑时留空表示不重置。</small></label><label>状态<select name="status"><option value="ACTIVE">正常</option><option value="DISABLED">停用</option></select></label></div><p id="staff-error" class="error"></p><div class="dialog-actions"><button type="button" class="ghost" data-close-staff>取消</button><button type="submit" class="primary">保存账号</button></div></form></dialog>
+  <dialog id="password-dialog"><form id="password-form" method="dialog"><div class="dialog-head"><div><p class="eyebrow">SECURITY</p><h2>修改我的密码</h2></div><button type="button" class="close" data-close-password>×</button></div><label>当前密码<input name="currentPassword" type="password" required></label><label>新密码<input name="newPassword" type="password" minlength="10" required><small>至少10位，同时包含字母和数字。保存后需要重新登录。</small></label><p id="password-error" class="error"></p><div class="dialog-actions"><button type="button" class="ghost" data-close-password>取消</button><button type="submit" class="primary">保存新密码</button></div></form></dialog>
+  <dialog id="description-dialog"><form id="description-form" method="dialog"><div class="dialog-head"><div><p class="eyebrow">PAGE COPY</p><h2>编辑页面说明</h2></div><button type="button" class="close" data-close-description>×</button></div><input type="hidden" name="page"><label>说明文字<textarea name="description" rows="4" maxlength="160" required></textarea><small>最多160字，保存后所有管理员都能看到。</small></label><p id="description-error" class="error"></p><div class="dialog-actions"><button type="button" class="ghost" data-close-description>取消</button><button type="submit" class="primary">保存说明</button></div></form></dialog>
+  <div id="toast" class="toast" hidden></div><script src="/admin/app.js"></script>
+</body>
+</html>

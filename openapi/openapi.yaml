@@ -1,0 +1,1459 @@
+openapi: 3.0.3
+info:
+  title: Knowledge Points Pickup System API
+  version: 0.1.0
+  description: 第一版小程序与运营后台接口契约，不包含支付、邮寄和物流。
+servers:
+  - url: /api/v1
+tags:
+  - name: Auth
+  - name: Videos
+  - name: Watch
+  - name: Points
+  - name: Gifts
+  - name: Stores
+  - name: Pickups
+  - name: Invitations
+  - name: Staff
+  - name: Admin
+
+paths:
+  /auth/wechat-login:
+    post:
+      tags: [Auth]
+      operationId: wechatLogin
+      summary: 微信登录并可在首次登录时绑定邀请人
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, minLength: 1 }
+                inviteCode: { type: string, nullable: true }
+                inviteSource: { type: string, nullable: true, example: QR_CODE }
+                sourceValue: { type: string, nullable: true }
+                landingScene: { type: string, nullable: true }
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResult' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /video-categories:
+    get:
+      tags: [Videos]
+      operationId: listVideoCategories
+      summary: 查询可用视频分类
+      security: []
+      responses:
+        '200':
+          description: 分类列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/IdName' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /videos:
+    get:
+      tags: [Videos]
+      operationId: listVideos
+      summary: 查询已上架视频
+      security: []
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - name: categoryId
+          in: query
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 视频分页列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoPage'
+        default: { $ref: '#/components/responses/Error' }
+
+  /videos/{videoId}:
+    get:
+      tags: [Videos]
+      operationId: getVideo
+      summary: 查询视频详情和计分说明
+      security: []
+      parameters:
+        - { $ref: '#/components/parameters/VideoId' }
+      responses:
+        '200':
+          description: 视频详情
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Video' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /watch-sessions:
+    post:
+      tags: [Watch]
+      operationId: createWatchSession
+      summary: 创建观看会话
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [videoId]
+              properties:
+                videoId: { type: integer, format: int64 }
+      responses:
+        '201':
+          description: 会话已创建
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WatchSession' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /watch-sessions/{sessionToken}/heartbeats:
+    post:
+      tags: [Watch]
+      operationId: submitWatchHeartbeat
+      summary: 提交播放心跳并由服务器结算有效时间
+      parameters:
+        - { $ref: '#/components/parameters/SessionToken' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WatchHeartbeatRequest' }
+      responses:
+        '200':
+          description: 心跳处理结果
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WatchHeartbeatResult' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /watch-sessions/{sessionToken}/close:
+    post:
+      tags: [Watch]
+      operationId: closeWatchSession
+      summary: 关闭观看会话
+      parameters:
+        - { $ref: '#/components/parameters/SessionToken' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [positionSeconds]
+              properties:
+                positionSeconds: { type: number, format: double, minimum: 0 }
+      responses:
+        '200':
+          description: 会话摘要
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WatchSessionSummary' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /watch-sessions/{sessionToken}/complete:
+    post:
+      tags: [Watch]
+      operationId: completeWatchSession
+      summary: 确认播放结束并按视频总分补齐不足一分钟的尾段积分
+      parameters:
+        - { $ref: '#/components/parameters/SessionToken' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [positionSeconds]
+              properties:
+                positionSeconds: { type: number, format: double, minimum: 0 }
+      responses:
+        '200':
+          description: 结尾积分结算结果
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WatchHeartbeatResult' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /me/points:
+    get:
+      tags: [Points]
+      operationId: getMyPoints
+      summary: 查询当前积分余额
+      responses:
+        '200':
+          description: 积分余额
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PointBalance' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /me/point-transactions:
+    get:
+      tags: [Points]
+      operationId: listMyPointTransactions
+      summary: 查询本人的积分流水
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - name: type
+          in: query
+          schema: { $ref: '#/components/schemas/PointTransactionType' }
+      responses:
+        '200':
+          description: 积分流水分页
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PointTransactionPage' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /gifts:
+    get:
+      tags: [Gifts]
+      operationId: listGifts
+      summary: 查询可领取礼品
+      security: []
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - name: storeId
+          in: query
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 礼品分页列表
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GiftPage' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /gifts/{giftId}:
+    get:
+      tags: [Gifts]
+      operationId: getGift
+      summary: 查询礼品和门店库存
+      security: []
+      parameters:
+        - { $ref: '#/components/parameters/GiftId' }
+        - name: storeId
+          in: query
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 礼品详情
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Gift' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /stores:
+    get:
+      tags: [Stores]
+      operationId: listStores
+      summary: 查询营业门店
+      security: []
+      parameters:
+        - name: keyword
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: 门店列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Store' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /pickup-requests:
+    get:
+      tags: [Pickups]
+      operationId: listMyPickupRequests
+      summary: 查询本人的领取申请
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/PickupStatus' }
+      responses:
+        '200':
+          description: 领取申请分页
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PickupPage' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Pickups]
+      operationId: createPickupRequest
+      summary: 扣积分并创建到店领取申请
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePickupRequest' }
+      responses:
+        '201':
+          description: 领取申请已创建
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PickupRequest' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /pickup-requests/{requestNo}:
+    get:
+      tags: [Pickups]
+      operationId: getMyPickupRequest
+      summary: 查询本人的领取详情和凭证
+      parameters:
+        - { $ref: '#/components/parameters/RequestNo' }
+      responses:
+        '200':
+          description: 领取申请详情
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PickupRequest' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /pickup-requests/{requestNo}/cancel:
+    post:
+      tags: [Pickups]
+      operationId: cancelMyPickupRequest
+      summary: 取消申请并退回积分和库存
+      parameters:
+        - { $ref: '#/components/parameters/RequestNo' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, maxLength: 255 }
+      responses:
+        '200':
+          description: 已取消
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PickupRequest' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /pickups/{pickupId}/voucher-qr:
+    post:
+      tags: [Pickups]
+      operationId: createMyPickupVoucherQr
+      summary: 为本人的到店领取申请生成核销二维码
+      description: 二维码仅用于向门店工作人员出示领取码；扫码本身不会完成核销，仍需工作人员在后台校验。
+      parameters:
+        - name: pickupId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: 已生成二维码
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [dataUrl, voucherCode, requestNo, giftName, storeName, status]
+                properties:
+                  dataUrl: { type: string, description: PNG 格式的 data URL }
+                  voucherCode: { type: string }
+                  requestNo: { type: string }
+                  giftName: { type: string }
+                  storeName: { type: string }
+                  status: { type: string }
+        default: { $ref: '#/components/responses/Error' }
+
+  /me/invitation:
+    get:
+      tags: [Invitations]
+      operationId: getMyInvitationInfo
+      summary: 查询邀请代码和当前奖励规则
+      responses:
+        '200':
+          description: 邀请信息
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvitationInfo' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /me/invitations:
+    get:
+      tags: [Invitations]
+      operationId: listMyInvitations
+      summary: 查询邀请记录
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: 邀请记录分页
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvitationPage' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /me/invitation-mini-code:
+    post:
+      tags: [Invitations]
+      operationId: createMyInvitationMiniCode
+      summary: 使用微信官方接口生成带本人邀请码的小程序码
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      responses:
+        '201':
+          description: 小程序码图片地址
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url, sourceType]
+                properties:
+                  url: { type: string }
+                  sourceType: { type: string, enum: [QR_CODE] }
+        default: { $ref: '#/components/responses/Error' }
+
+  /staff/auth/login:
+    post:
+      tags: [Staff]
+      operationId: staffLogin
+      summary: 后台员工登录
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string, format: password }
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StaffLoginResult' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/videos:
+    get:
+      tags: [Admin]
+      operationId: adminListVideos
+      summary: 管理员查询视频
+      responses:
+        '200': { description: 视频列表 }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Admin]
+      operationId: adminCreateVideo
+      summary: 管理员创建视频
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminVideoInput' }
+      responses:
+        '201':
+          description: 已创建
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminMutationResult' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/videos/{videoId}:
+    patch:
+      tags: [Admin]
+      operationId: adminUpdateVideo
+      summary: 管理员修改或上下架视频
+      parameters:
+        - { $ref: '#/components/parameters/VideoId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminVideoInput' }
+      responses:
+        '200':
+          description: 已更新
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminMutationResult' }
+        default: { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [Admin]
+      operationId: deleteAdminVideo
+      summary: 删除没有观看历史的视频；已有历史的视频只能下架
+      parameters:
+        - { $ref: '#/components/parameters/VideoId' }
+      responses:
+        '204': { description: 删除成功 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/video-uploads:
+    post:
+      tags: [Admin]
+      operationId: uploadAdminVideo
+      summary: 上传后台管理的视频文件
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dataUrl]
+              properties:
+                dataUrl: { type: string, minLength: 1 }
+      responses:
+        '201': { description: 上传成功 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/uploads/presign:
+    post:
+      tags: [Admin]
+      operationId: adminCreateDirectUploadUrl
+      summary: 为视频或图片签发一次 OSS 直传地址
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind, filename, contentType, size]
+              properties:
+                kind: { type: string, enum: [video, image] }
+                filename: { type: string, minLength: 1 }
+                contentType: { type: string, minLength: 1 }
+                size: { type: integer, minimum: 1 }
+      responses:
+        '201': { description: 已返回直传地址和内部存储引用 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/storage/assets:
+    get:
+      tags: [Admin]
+      operationId: adminListStorageAssets
+      summary: 对账 OSS 文件与数据库引用并返回使用状态
+      responses:
+        '200': { description: 文件、汇总和清理等待天数 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/storage/assets/cleanup-request:
+    post:
+      tags: [Admin]
+      operationId: adminRequestStorageAssetCleanup
+      summary: 将未绑定文件加入延迟清理队列
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StorageAssetInput' }
+      responses:
+        '200': { description: 已进入等待期并返回最早删除时间 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/storage/assets/cleanup-cancel:
+    post:
+      tags: [Admin]
+      operationId: adminCancelStorageAssetCleanup
+      summary: 在永久删除前撤销清理申请
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StorageAssetInput' }
+      responses:
+        '200': { description: 已撤销清理申请 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/storage/assets/delete:
+    post:
+      tags: [Admin]
+      operationId: adminDeleteStorageAsset
+      summary: 等待期结束后再次核对引用并永久删除文件
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StorageAssetInput' }
+      responses:
+        '200': { description: 文件已永久删除并留下操作日志 }
+        '409': { description: 文件仍在等待期或重新被业务内容引用 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/video-categories:
+    get:
+      tags: [Admin]
+      operationId: adminListVideoCategories
+      summary: 管理员查询全部视频分类
+      responses:
+        '200': { description: 分类列表 }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Admin]
+      operationId: adminCreateVideoCategory
+      summary: 管理员创建视频分类
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminCategoryInput' }
+      responses:
+        '201': { description: 已创建 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/video-categories/{categoryId}:
+    patch:
+      tags: [Admin]
+      operationId: adminUpdateVideoCategory
+      summary: 管理员修改、排序或停用视频分类
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminCategoryInput' }
+      responses:
+        '200': { description: 已更新 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/gifts:
+    get:
+      tags: [Admin]
+      operationId: adminListGifts
+      summary: 管理员查询礼品
+      responses:
+        '200': { description: 礼品列表 }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Admin]
+      operationId: adminCreateGift
+      summary: 管理员创建礼品
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminGiftInput' }
+      responses:
+        '201': { description: 已创建 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/gifts/{giftId}:
+    patch:
+      tags: [Admin]
+      operationId: adminUpdateGift
+      summary: 管理员修改或上下架礼品
+      parameters:
+        - { $ref: '#/components/parameters/GiftId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminGiftInput' }
+      responses:
+        '200': { description: 已更新 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/stores:
+    get:
+      tags: [Admin]
+      operationId: adminListStores
+      summary: 管理员查询门店
+      responses:
+        '200': { description: 门店列表 }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Admin]
+      operationId: adminCreateStore
+      summary: 管理员创建门店
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminStoreInput' }
+      responses:
+        '201': { description: 已创建 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/stores/{storeId}:
+    patch:
+      tags: [Admin]
+      operationId: adminUpdateStore
+      summary: 管理员修改门店
+      parameters:
+        - { $ref: '#/components/parameters/StoreId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminStoreInput' }
+      responses:
+        '200': { description: 已更新 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/stores/{storeId}/gift-inventory/{giftId}:
+    put:
+      tags: [Admin]
+      operationId: adminSetGiftInventory
+      summary: 管理员设置门店礼品库存
+      parameters:
+        - { $ref: '#/components/parameters/StoreId' }
+        - { $ref: '#/components/parameters/GiftId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [availableQuantity]
+              properties:
+                availableQuantity: { type: integer, minimum: 0 }
+      responses:
+        '200': { description: 库存已更新 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /staff/pickup-requests:
+    get:
+      tags: [Staff]
+      operationId: staffListPickupRequests
+      summary: 查询权限范围内的领取申请
+      responses:
+        '200': { description: 领取申请列表 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /staff/pickup-requests/{requestNo}/contacted:
+    post:
+      tags: [Staff]
+      operationId: staffMarkPickupContacted
+      summary: 标记已经联系用户
+      parameters:
+        - { $ref: '#/components/parameters/RequestNo' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                remark: { type: string, maxLength: 255 }
+      responses:
+        '200': { description: 状态已更新 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /staff/pickup-requests/{requestNo}/verify:
+    post:
+      tags: [Staff]
+      operationId: staffVerifyPickup
+      summary: 核验凭证并完成到店领取
+      parameters:
+        - { $ref: '#/components/parameters/RequestNo' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [voucherCode]
+              properties:
+                voucherCode: { type: string }
+      responses:
+        '200': { description: 核销成功 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /staff/pickup-requests/{requestNo}/reject:
+    post:
+      tags: [Staff]
+      operationId: staffRejectPickup
+      summary: 拒绝申请并退积分退库存
+      parameters:
+        - { $ref: '#/components/parameters/RequestNo' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 1, maxLength: 255 }
+      responses:
+        '200': { description: 已拒绝 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /staff/store-leads:
+    get:
+      tags: [Staff]
+      operationId: staffListStoreLeads
+      summary: 查询权限范围内的门店线索
+      responses:
+        '200': { description: 线索列表 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /staff/store-leads/{leadId}:
+    patch:
+      tags: [Staff]
+      operationId: staffUpdateStoreLead
+      summary: 更新联系结果和跟进备注
+      parameters:
+        - name: leadId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StoreLeadUpdate' }
+      responses:
+        '200': { description: 线索已更新 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      operationId: adminListUsers
+      summary: 管理员查询用户
+      responses:
+        '200': { description: 用户列表 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/users/{userId}:
+    get:
+      tags: [Admin]
+      operationId: adminGetUserProfile
+      summary: 管理员查询会员档案、观看、积分和领取明细
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200': { description: 会员完整档案 }
+        default: { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [Admin]
+      operationId: adminUpdateUserProfile
+      summary: 管理员修改会员资料、标签、备注和状态
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, status]
+              properties:
+                name: { type: string, maxLength: 50 }
+                mobile: { type: string, maxLength: 20 }
+                tags: { type: string, maxLength: 200 }
+                notes: { type: string, maxLength: 1000 }
+                status: { type: string, enum: [ACTIVE, DISABLED] }
+      responses:
+        '200': { description: 会员资料已更新 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/watch-details:
+    get:
+      tags: [Admin]
+      operationId: adminListWatchDetails
+      summary: 管理员查询逐会员逐视频的有效观看明细
+      responses:
+        '200': { description: 观看明细和汇总 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/uploads/images:
+    post:
+      tags: [Admin]
+      operationId: adminUploadGiftImage
+      summary: 管理员上传礼品图片
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dataUrl]
+              properties:
+                dataUrl: { type: string, description: 不超过3MB的 PNG、JPG 或 WebP Data URL }
+      responses:
+        '201': { description: 图片已上传并返回访问地址 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/point-transactions:
+    get:
+      tags: [Admin]
+      operationId: adminListPointTransactions
+      summary: 管理员查询积分流水
+      responses:
+        '200': { description: 积分流水列表 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/users/{userId}/point-adjustments:
+    post:
+      tags: [Admin]
+      operationId: adminAdjustUserPoints
+      summary: 管理员人工调整积分并记录原因
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, reason]
+              properties:
+                amount: { type: integer, format: int64, not: { enum: [0] } }
+                reason: { type: string, minLength: 1, maxLength: 255 }
+      responses:
+        '200': { description: 积分已调整 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/system-configs:
+    get:
+      tags: [Admin]
+      operationId: adminListSystemConfigs
+      summary: 查询系统配置
+      responses:
+        '200': { description: 配置列表 }
+        default: { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [Admin]
+      operationId: adminUpdateSystemConfigs
+      summary: 修改系统配置并记录日志
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200': { description: 配置已更新 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/dashboard:
+    get:
+      tags: [Admin]
+      operationId: adminGetDashboard
+      summary: 查询核心业务统计
+      responses:
+        '200': { description: 统计摘要 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/page-descriptions:
+    get:
+      tags: [Admin]
+      operationId: adminListPageDescriptions
+      summary: 查询后台各页说明文字
+      responses:
+        '200': { description: 页面说明键值 }
+        default: { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [Admin]
+      operationId: adminUpdatePageDescriptions
+      summary: 修改后台页面说明并记录日志
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [values]
+              properties:
+                values:
+                  type: object
+                  additionalProperties: { type: string, minLength: 1, maxLength: 160 }
+      responses:
+        '200': { description: 页面说明已更新 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/operation-logs:
+    get:
+      tags: [Admin]
+      operationId: adminListOperationLogs
+      summary: 查询后台操作日志
+      responses:
+        '200': { description: 操作日志列表 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/operation-logs/export:
+    get:
+      tags: [Admin]
+      operationId: exportAdminOperationLogs
+      summary: 导出全部后台操作日志CSV
+      responses:
+        '200':
+          description: CSV日志文件
+          content:
+            text/csv:
+              schema: { type: string, format: binary }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/invitations:
+    get:
+      tags: [Admin]
+      operationId: adminListInvitations
+      summary: 管理员查询邀请绑定和奖励状态
+      responses:
+        '200': { description: 邀请记录列表 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/staff:
+    get:
+      tags: [Admin]
+      operationId: adminListStaff
+      summary: 管理员查询后台员工
+      responses:
+        '200': { description: 员工列表 }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Admin]
+      operationId: adminCreateStaff
+      summary: 管理员创建门店核销员
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminStaffInput' }
+      responses:
+        '201': { description: 员工已创建 }
+        default: { $ref: '#/components/responses/Error' }
+
+  /admin/staff/{staffId}:
+    patch:
+      tags: [Admin]
+      operationId: adminUpdateStaff
+      summary: 管理员修改核销员所属门店或账号状态
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminStaffInput' }
+      responses:
+        '200': { description: 员工已更新 }
+        default: { $ref: '#/components/responses/Error' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PageSize:
+      name: pageSize
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 100 }
+    VideoId:
+      name: videoId
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+    GiftId:
+      name: giftId
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+    StoreId:
+      name: storeId
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+    RequestNo:
+      name: requestNo
+      in: path
+      required: true
+      schema: { type: string }
+    SessionToken:
+      name: sessionToken
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    Error:
+      description: 业务或系统错误
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Error:
+      type: object
+      required: [code, message, requestId]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        requestId: { type: string }
+        details: { type: object, additionalProperties: true }
+    IdName:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+    LoginResult:
+      type: object
+      required: [accessToken, expiresIn, isNewUser, user]
+      properties:
+        accessToken: { type: string }
+        expiresIn: { type: integer, example: 7200 }
+        isNewUser: { type: boolean }
+        invitationBound: { type: boolean }
+        user: { $ref: '#/components/schemas/UserSummary' }
+    UserSummary:
+      type: object
+      required: [id, status]
+      properties:
+        id: { type: integer, format: int64 }
+        nickname: { type: string, nullable: true }
+        avatarUrl: { type: string, nullable: true }
+        status: { type: string, enum: [ACTIVE, DISABLED, CANCELLED] }
+    Video:
+      type: object
+      required: [id, title, coverUrl, videoUrl, durationSeconds, totalPoints]
+      properties:
+        id: { type: integer, format: int64 }
+        category: { $ref: '#/components/schemas/IdName' }
+        title: { type: string }
+        summary: { type: string, nullable: true }
+        tags:
+          type: string
+          description: 逗号分隔的视频内容标签
+        coverUrl: { type: string, format: uri }
+        videoUrl: { type: string, format: uri }
+        durationSeconds: { type: integer }
+        totalPoints: { type: integer, example: 2, description: 管理员确认的视频积分上限；累计有效观看每满一分钟发1分 }
+        viewCount: { type: integer, minimum: 0, description: 至少产生一次有效心跳的观看会话次数 }
+        userValidSeconds: { type: integer, minimum: 0, description: 当前用户已确认的累计有效观看秒数 }
+        userRewardedPoints: { type: integer, minimum: 0, description: 当前用户已从该视频获得的积分 }
+    VideoPage:
+      allOf:
+        - { $ref: '#/components/schemas/PageMeta' }
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/Video' }
+    WatchSession:
+      type: object
+      required: [sessionToken, heartbeatIntervalSeconds, resumePositionSeconds]
+      properties:
+        sessionToken: { type: string, format: uuid }
+        heartbeatIntervalSeconds: { type: integer, example: 5 }
+        resumePositionSeconds: { type: integer, minimum: 0, description: 本次播放器应从该有效位置继续 }
+    WatchHeartbeatRequest:
+      type: object
+      required: [positionSeconds, playing, playbackRate, pageVisible, clientTime]
+      properties:
+        positionSeconds: { type: number, format: double, minimum: 0 }
+        playing: { type: boolean }
+        playbackRate: { type: number, format: double, example: 1 }
+        pageVisible: { type: boolean }
+        clientTime: { type: string, format: date-time }
+    WatchHeartbeatResult:
+      type: object
+      required: [acceptedSeconds, totalValidSeconds, awardedPoints, pointBalance]
+      properties:
+        acceptedSeconds: { type: integer, enum: [0, 5] }
+        totalValidSeconds: { type: integer }
+        awardedPoints: { type: integer }
+        pointBalance: { type: integer, format: int64 }
+        rejectionCode: { type: string, nullable: true }
+    WatchSessionSummary:
+      type: object
+      required: [totalValidSeconds, totalAwardedPoints, status]
+      properties:
+        totalValidSeconds: { type: integer }
+        totalAwardedPoints: { type: integer }
+        status: { type: string, enum: [CLOSED, ABNORMAL] }
+    PointBalance:
+      type: object
+      required: [balance]
+      properties:
+        balance: { type: integer, format: int64 }
+    PointTransactionType:
+      type: string
+      enum: [VIDEO_REWARD, INVITE_REWARD, PICKUP_DEBIT, PICKUP_REFUND, MANUAL_ADJUST]
+    PointTransaction:
+      type: object
+      required: [id, amount, balanceAfter, type, description, createdAt]
+      properties:
+        id: { type: integer, format: int64 }
+        amount: { type: integer, format: int64 }
+        balanceAfter: { type: integer, format: int64 }
+        type: { $ref: '#/components/schemas/PointTransactionType' }
+        description: { type: string }
+        createdAt: { type: string, format: date-time }
+    PointTransactionPage:
+      allOf:
+        - { $ref: '#/components/schemas/PageMeta' }
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/PointTransaction' }
+    Gift:
+      type: object
+      required: [id, name, imageUrl, pointsCost]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        imageUrl: { type: string, format: uri }
+        pointsCost: { type: integer, format: int64 }
+        perUserLimit: { type: integer, nullable: true }
+        storeInventories:
+          type: array
+          items:
+            type: object
+            properties:
+              storeId: { type: integer, format: int64 }
+              available: { type: integer }
+    GiftPage:
+      allOf:
+        - { $ref: '#/components/schemas/PageMeta' }
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/Gift' }
+    Store:
+      type: object
+      required: [id, name, address, contactPhone, businessHours]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        address: { type: string }
+        contactPhone: { type: string }
+        businessHours: { type: string }
+        latitude: { type: number, nullable: true }
+        longitude: { type: number, nullable: true }
+    CreatePickupRequest:
+      type: object
+      required: [giftId, storeId, contactName, contactMobile, privacyConsent]
+      properties:
+        giftId: { type: integer, format: int64 }
+        storeId: { type: integer, format: int64 }
+        contactName: { type: string, maxLength: 100 }
+        contactMobile: { type: string, minLength: 6, maxLength: 32 }
+        privacyConsent: { type: boolean, enum: [true] }
+    PickupStatus:
+      type: string
+      enum: [WAIT_CONTACT, WAIT_ARRIVAL, PICKED_UP, CANCELLED, REJECTED, EXPIRED]
+    PickupRequest:
+      type: object
+      required: [requestNo, gift, store, pointsCost, voucherCode, status, expiresAt, createdAt]
+      properties:
+        requestNo: { type: string }
+        gift: { $ref: '#/components/schemas/Gift' }
+        store: { $ref: '#/components/schemas/Store' }
+        pointsCost: { type: integer, format: int64 }
+        voucherCode: { type: string }
+        status: { $ref: '#/components/schemas/PickupStatus' }
+        expiresAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        timeline:
+          type: array
+          items:
+            type: object
+            properties:
+              status: { $ref: '#/components/schemas/PickupStatus' }
+              at: { type: string, format: date-time }
+              remark: { type: string, nullable: true }
+    PickupPage:
+      allOf:
+        - { $ref: '#/components/schemas/PageMeta' }
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/PickupRequest' }
+    InvitationInfo:
+      type: object
+      required: [inviteCode, inviterRewardPoints, inviteeRewardPoints, qualification]
+      properties:
+        inviteCode: { type: string }
+        inviterRewardPoints: { type: integer, example: 50 }
+        inviteeRewardPoints: { type: integer, example: 10 }
+        qualification: { type: string, example: 被邀请人首次获得有效观看积分 }
+    InvitationRecord:
+      type: object
+      required: [inviteeNickname, status, createdAt]
+      properties:
+        inviteeNickname: { type: string }
+        status: { type: string, enum: [BOUND, QUALIFIED, REWARDED, INVALID] }
+        createdAt: { type: string, format: date-time }
+        rewardedAt: { type: string, format: date-time, nullable: true }
+    InvitationPage:
+      allOf:
+        - { $ref: '#/components/schemas/PageMeta' }
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/InvitationRecord' }
+    StaffLoginResult:
+      type: object
+      required: [accessToken, expiresIn, role, displayName]
+      properties:
+        accessToken: { type: string }
+        expiresIn: { type: integer }
+        role: { type: string, enum: [ADMIN, STORE_VERIFIER] }
+        storeId: { type: integer, format: int64, nullable: true }
+        displayName: { type: string }
+    PageMeta:
+      type: object
+      required: [page, pageSize, total]
+      properties:
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer, format: int64 }
+    AdminMutationResult:
+      type: object
+      required: [id, updatedAt]
+      properties:
+        id: { type: integer, format: int64 }
+        updatedAt: { type: string, format: date-time }
+    StorageAssetInput:
+      type: object
+      required: [storageRef]
+      properties:
+        storageRef:
+          type: string
+          minLength: 1
+          description: 后端签发并记录的 oss:// 存储引用
+    AdminCategoryInput:
+      type: object
+      required: [name, sortOrder, status]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        sortOrder: { type: integer }
+        status: { type: string, enum: [ACTIVE, INACTIVE] }
+    AdminVideoInput:
+      type: object
+      required: [categoryId, title, coverUrl, videoUrl, durationSeconds, totalPoints, status]
+      properties:
+        categoryId: { type: integer, format: int64 }
+        title: { type: string, minLength: 1, maxLength: 200 }
+        summary: { type: string, maxLength: 1000 }
+        tags: { type: string, maxLength: 200, description: 逗号分隔的标签 }
+        coverUrl: { type: string, format: uri }
+        videoUrl: { type: string, format: uri }
+        durationSeconds: { type: integer, minimum: 1 }
+        totalPoints: { type: integer, minimum: 0, description: 默认按时长推荐，管理员可调整的总积分上限 }
+        status: { type: string, enum: [DRAFT, PUBLISHED, OFFLINE] }
+    AdminGiftInput:
+      type: object
+      required: [name, imageUrl, pointsCost, status]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        description: { type: string }
+        imageUrl: { type: string, format: uri }
+        pointsCost: { type: integer, format: int64, minimum: 1 }
+        perUserLimit: { type: integer, minimum: 1, nullable: true }
+        status: { type: string, enum: [DRAFT, ACTIVE, INACTIVE] }
+    AdminStoreInput:
+      type: object
+      required: [name, address, contactPhone, status]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        address: { type: string, minLength: 1, maxLength: 255 }
+        contactPhone: { type: string, minLength: 6, maxLength: 32 }
+        businessHours: { type: string, maxLength: 100 }
+        latitude: { type: number, nullable: true }
+        longitude: { type: number, nullable: true }
+        status: { type: string, enum: [ACTIVE, INACTIVE] }
+    StoreLeadUpdate:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [NEW, CONTACTED, ARRIVED, CLOSED] }
+        nextFollowUpAt: { type: string, format: date-time, nullable: true }
+        remark: { type: string, maxLength: 500 }
+    AdminStaffInput:
+      type: object
+      required: [username, displayName, role, status]
+      properties:
+        username: { type: string, minLength: 1, maxLength: 64 }
+        displayName: { type: string, minLength: 1, maxLength: 100 }
+        initialPassword: { type: string, format: password, minLength: 12 }
+        role: { type: string, enum: [ADMIN, STORE_VERIFIER] }
+        storeId: { type: integer, format: int64, nullable: true }
+        status: { type: string, enum: [ACTIVE, DISABLED] }
+
+security:
+  - bearerAuth: []

@@ -1,0 +1,35 @@
+name: knowledge-points-test
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.server-test
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8770:8770"
+    environment:
+      ENABLE_DEV_ENDPOINTS: "0"
+      LOCAL_ADMIN_PASSWORD: "${LOCAL_ADMIN_PASSWORD:-}"
+      SEED_DEFAULT_VERIFIER: "0"
+      WX_APPID: "${WX_APPID:-}"
+      WX_APPSECRET: "${WX_APPSECRET:-}"
+      OSS_ACCESS_KEY_ID: "${OSS_ACCESS_KEY_ID:-}"
+      OSS_ACCESS_KEY_SECRET: "${OSS_ACCESS_KEY_SECRET:-}"
+      OSS_ENDPOINT: "${OSS_ENDPOINT:-}"
+      OSS_BUCKET: "${OSS_BUCKET:-}"
+      OSS_PREFIX: "${OSS_PREFIX:-knowledge-points}"
+    volumes:
+      - database-data:/app/database
+      - upload-data:/app/web/uploads
+    mem_limit: 256m
+    pids_limit: 128
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  database-data:
+  upload-data:

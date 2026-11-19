@@ -1,0 +1,28 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Local development data
+database/*.sqlite3
+database/*.sqlite3-*
+backups/
+logs/
+
+# Generated demo media
+web/media/*.mp4
+web/uploads/
+
+# Editor and operating system
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+# 微信官方文档离线网页由脚本刷新，不纳入 Git；知识库说明和项目规范纳入 Git。
+docs/本地知识库/微信小程序官方文档/官方网页快照/
+docs/本地知识库/微信小程序官方文档/下载清单.json

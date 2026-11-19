@@ -1,0 +1,2 @@
+# Test-only dependencies: validate_design.py imports PyYAML.
+pyyaml>=6

@@ -1,0 +1,1 @@
+.dashboard-grid{grid-template-columns:repeat(3,1fr)}.settings-form{padding:4px 24px 24px}.config-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0 18px}@media(max-width:800px){.dashboard-grid,.config-grid{grid-template-columns:1fr}}

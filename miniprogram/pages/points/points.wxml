@@ -1,0 +1,8 @@
+<view class="points-page">
+  <view class="filter-tabs"><button wx:for="{{filters}}" wx:key="value" class="{{activeFilter === item.value ? 'active' : ''}}" data-value="{{item.value}}" bindtap="changeFilter">{{item.label}}</button></view>
+  <view wx:if="{{loading}}" class="page-loading">正在加载积分明细…</view>
+  <view wx:elif="{{!filteredItems.length}}" class="empty-state">暂无积分记录</view>
+  <view wx:else class="ledger-list">
+    <view wx:for="{{filteredItems}}" wx:key="id" class="ledger-row"><view><text class="ledger-title">{{item.displayTitle}}</text><text class="ledger-copy">{{item.description}}</text><text class="ledger-time">{{item.created_at}}</text></view><text class="ledger-amount {{item.amount < 0 ? 'minus' : ''}}">{{item.displayAmount}}</text></view>
+  </view>
+</view>

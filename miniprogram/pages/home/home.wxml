@@ -1,0 +1,24 @@
+<view class="home-page">
+  <button class="health-banner" hover-class="health-banner-active" bindtap="goVideos">
+    <text class="banner-title">Live Well · Health Knowledge</text>
+    <view class="watch-action"><text class="play-dot">▶</text><text>点击观看视频</text></view>
+  </button>
+  <view class="section-copy">
+    <text class="section-title">积分好礼</text>
+    <text class="section-subtitle">精选健康好礼，积分即可申请到店领取</text>
+  </view>
+  <view wx:if="{{loading}}" class="page-loading">正在加载礼品…</view>
+  <view wx:elif="{{errorMessage}}" class="page-error">{{errorMessage}}</view>
+  <view wx:else class="gift-grid">
+    <button wx:for="{{gifts}}" wx:key="id" class="gift-tile" data-id="{{item.id}}" hover-class="gift-tile-active" bindtap="goExchange">
+      <view class="image-wrap">
+        <image class="gift-image" src="{{item.displayImage}}" mode="aspectFill" />
+        <text class="market-badge">¥{{item.market_price}}</text>
+      </view>
+      <text class="gift-name">{{item.name}}</text>
+      <text class="market-price">¥{{item.market_price}}</text>
+      <text class="points-price">{{item.points_cost}} 积分</text>
+    </button>
+  </view>
+  <view class="safe-tip">礼品仅支持线下门店领取，不提供邮寄或物流服务</view>
+</view>

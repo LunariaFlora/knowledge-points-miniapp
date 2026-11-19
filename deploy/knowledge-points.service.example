@@ -1,0 +1,17 @@
+[Unit]
+Description=Knowledge points mini-program backend
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=knowledge-app
+WorkingDirectory=/srv/knowledge-points
+EnvironmentFile=/srv/knowledge-points/.env
+ExecStart=/usr/bin/python3 app/server.py --host 127.0.0.1 --port 8765
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

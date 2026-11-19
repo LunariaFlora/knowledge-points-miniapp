@@ -1,0 +1,47 @@
+<view class="exchange-page">
+  <view class="balance-card">
+    <view><text class="balance-value">{{points}}</text><text class="balance-label">当前可用积分</text></view>
+    <view><text class="balance-value">{{totalEarned}}</text><text class="balance-label">累计积分</text></view>
+  </view>
+  <text class="exchange-heading">可兑换礼品</text>
+  <view wx:if="{{loading}}" class="page-loading">正在加载礼品…</view>
+  <view wx:elif="{{errorMessage}}" class="page-error">{{errorMessage}}</view>
+  <view wx:else class="exchange-list">
+    <button wx:for="{{gifts}}" wx:key="id" class="exchange-item" data-id="{{item.id}}" bindtap="openGift">
+      <image src="{{item.displayImage}}" mode="aspectFill" />
+      <view class="exchange-info"><text class="gift-name">{{item.name}}</text><text wx:if="{{item.market_price > 0}}" class="gift-market">市场参考价：¥{{item.market_price}}</text><text class="gift-points">{{item.points_cost}}积分</text></view>
+      <text class="redeem-state {{item.canRedeem ? '' : 'disabled'}}">{{item.redeemLabel}}</text>
+    </button>
+  </view>
+  <view class="safe-tip">所有礼品兑换后生成到店领取凭证，请前往选择的门店领取</view>
+</view>
+
+<view wx:if="{{showGiftDetail}}" class="modal-root">
+  <view class="modal-mask" catchtap="closeGift"></view>
+  <view class="product-sheet">
+    <button class="modal-close" bindtap="closeGift">×</button>
+    <swiper class="detail-swiper" current="{{currentImageIndex}}" circular="{{selectedGift.displayImages.length > 1}}" indicator-dots="{{selectedGift.displayImages.length > 1}}" bindchange="imageChange">
+      <swiper-item wx:for="{{selectedGift.displayImages}}" wx:key="*this"><image class="detail-image" src="{{item}}" mode="aspectFill" /></swiper-item>
+    </swiper>
+    <text class="pager-dot">{{currentImageIndex + 1}} / {{selectedGift.displayImages.length}}</text>
+    <text class="detail-name">{{selectedGift.name}}</text>
+    <view class="detail-price"><text wx:if="{{selectedGift.market_price > 0}}" class="detail-market">市场参考价 ¥{{selectedGift.market_price}}</text><text class="detail-points">{{selectedGift.points_cost}} 积分</text><text class="detail-stock">库存 {{selectedGift.available_quantity}} 件</text></view>
+    <text class="detail-description">{{selectedGift.description}} 礼品申请成功后将生成到店领取凭证。</text>
+    <button class="primary-action" disabled="{{!selectedGift.canRedeem}}" bindtap="openPickup">{{selectedGift.redeemLabel === '去领取' ? '申请到店领取' : selectedGift.redeemLabel}}</button>
+  </view>
+</view>
+
+<view wx:if="{{showPickup}}" class="modal-root">
+  <view class="modal-mask" catchtap="closePickup"></view>
+  <view class="pickup-sheet">
+    <button class="modal-close" bindtap="closePickup">×</button>
+    <view class="sheet-grabber"></view><text class="pickup-title">确认到店领取</text>
+    <view class="selected-gift"><image src="{{selectedGift.displayImage}}" mode="aspectFill"/><view><text>{{selectedGift.name}}</text><text>{{selectedGift.points_cost}}积分</text></view></view>
+    <text class="field-label">领取门店</text><picker mode="selector" range="{{stores}}" range-key="name" value="{{storeIndex}}" bindchange="storeChange"><view class="field-box">{{stores[storeIndex].name}} <text>⌄</text></view></picker>
+    <text class="field-label">联系人</text><input class="field-box" value="{{contactName}}" placeholder="请输入联系人姓名" adjust-position="{{true}}" cursor-spacing="24" bindinput="nameInput" />
+    <text class="field-label">手机号</text><input class="field-box" type="number" value="{{contactMobile}}" placeholder="请输入手机号" adjust-position="{{true}}" cursor-spacing="24" bindinput="mobileInput" />
+    <checkbox-group bindchange="consentChange"><label class="consent-row"><checkbox value="agree" checked="{{consent}}" color="#10cf68"/><text>同意门店为预约领取与我联系</text></label></checkbox-group>
+    <text class="pickup-tip">本系统不支持邮寄，礼品需凭领取码到店核销。</text>
+    <button class="primary-action" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitPickup">提交领取申请</button>
+  </view>
+</view>

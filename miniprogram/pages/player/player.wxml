@@ -1,0 +1,17 @@
+<view class="player-page">
+  <view wx:if="{{loading}}" class="page-loading">正在加载视频…</view>
+  <view wx:elif="{{errorMessage}}" class="page-error">{{errorMessage}}</view>
+  <block wx:else>
+    <view class="player-card">
+      <video id="knowledge-video" src="{{videoUrl}}" initial-time="{{resumePosition}}" controls enable-progress-gesture show-center-play-btn bindplay="handlePlay" bindpause="handlePause" bindtimeupdate="handleTimeUpdate" bindended="handleEnded" binderror="handleVideoError" />
+      <text class="player-reward">本视频最多可得 {{video.total_points}} 积分</text>
+    </view>
+    <view class="watch-progress"><view class="watch-progress-track"><view class="watch-progress-fill" style="width: {{progressPercent}}%"></view></view><text>{{progressLabel}}</text><view class="view-count"><view class="eye-icon"></view><text>{{video.view_count || 0}}</text></view></view>
+    <view class="video-detail-copy">
+      <text class="player-title">{{video.title}}</text>
+      <view wx:if="{{video.displayTags.length}}" class="player-tags"><text wx:for="{{video.displayTags}}" wx:key="*this" class="player-tag">{{item}}</text></view>
+      <text class="video-byline">Health Knowledge Series · 内容仅作健康知识普及</text>
+      <text class="video-summary">{{video.summary}}</text>
+    </view>
+  </block>
+</view>
